@@ -111,7 +111,9 @@ pub enum DialogueResult<S> {
     /// Next state
     Next(S),
     /// Exit from dialogue
-    Exit,
+    Stop,
+    /// Continue handler
+    Continue
 }
 
 #[async_trait]
@@ -120,7 +122,7 @@ where
     C: Send + Sync,
     B: SessionBackend + Send,
     H: DialogueHandler<C, S> + Send,
-    S: State + Send + Sync,
+    S: State + Send + Sync + std::fmt::Debug,
     <H as DialogueHandler<C, S>>::Error: 'static,
     <<H as DialogueHandler<C, S>>::Input as TryFromUpdate>::Error: 'static,
 {
@@ -145,22 +147,25 @@ where
                 Err(err) => return HandlerResult::error(err),
             }
         };
+        log::debug!("in dialogue handle, state: {:?}", state);
         match self.handler.handle(state, context, input).await {
             Ok(DialogueResult::Next(state)) => {
                 if let Err(err) = session.set(&self.session_key, &state).await {
                     return HandlerResult::error(err);
                 }
+                HandlerResult::Stop
             }
-            Ok(DialogueResult::Exit) => {
-                if let Err(err) = session.remove(&self.session_key).await {
-                    return HandlerResult::error(err);
-                };
+            Ok(DialogueResult::Stop) => {
+                let _ = session.remove(&self.session_key).await;
+                HandlerResult::Stop
+            }
+            Ok(DialogueResult::Continue) => {
+                HandlerResult::Continue
             }
             Err(err) => {
-                return HandlerResult::error(err);
+                HandlerResult::error(err)
             }
         }
-        HandlerResult::Continue
     }
 }
 
