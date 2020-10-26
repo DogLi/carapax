@@ -34,7 +34,7 @@ nonzero_ext = { version = "0.2", default-features = false, optional = true }
 ratelimit_meter = { version = "5", optional = true }
 serde = { version = "1", optional = true }
 tgbot = "0.10"
-tokio = "0.2"
+tokio = "0.3"
 seance = { version = "0.3", optional = true }
 
 [dev-dependencies]
@@ -42,7 +42,7 @@ dotenv = "0.15"
 env_logger = "0.7"
 serde_json = "1"
 tempfile = "3"
-tokio = { version = "0.2", features = ["sync", "macros"]}
+tokio = { version = "0.3", features = ["sync", "macros"]}
 
 [[example]]
 name = "access"
